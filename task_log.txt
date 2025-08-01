@@ -1,0 +1,28 @@
+
+---- Task Run: 2025-06-17 14:42:00.366414 ----
+📤 Sending 3 email(s):
+✅ Sent to: deekshithh60@gmail.com
+✅ Sent to: rajd53240@gmail.com
+✅ Sent to: aanushnaik@gmail.com
+📁 CSV updated and saved to: hremail_updated.csv
+
+---- Task Run: 2025-06-17 15:00:01.852974 ----
+📤 Sending 3 email(s):
+✅ Sent to: deekshithh60@gmail.com
+✅ Sent to: rajd53240@gmail.com
+✅ Sent to: aanushnaik@gmail.com
+📁 CSV updated and saved to: hremail_updated.csv
+
+---- Task Run: 2025-08-01 17:57:22.515515 ----
+📤 Sending 3 email(s):
+✅ Sent to: deekshithh60@gmail.com
+✅ Sent to: rajd53240@gmail.com
+✅ Sent to: aanushnaik@gmail.com
+📁 CSV updated and saved to: hremail_updated.csv
+
+---- Task Run: 2025-08-01 17:57:42.491682 ----
+📤 Sending 3 email(s):
+✅ Sent to: deekshithh60@gmail.com
+✅ Sent to: rajd53240@gmail.com
+✅ Sent to: aanushnaik@gmail.com
+📁 CSV updated and saved to: hremail_updated.csv
