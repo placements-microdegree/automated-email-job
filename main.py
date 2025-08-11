@@ -5,10 +5,20 @@ import pandas as pd
 import smtplib
 from email.message import EmailMessage
 
-# Log output to file
-log_file = open("task_log.txt", "a", encoding="utf-8")
-sys.stdout = log_file
-sys.stderr = log_file
+# Log output to both file and console
+class Logger:
+    def __init__(self, filename):
+        self.terminal = sys.stdout
+        self.log = open(filename, "a", encoding="utf-8")
+    def write(self, message):
+        self.terminal.write(message)
+        self.log.write(message)
+    def flush(self):
+        self.terminal.flush()
+        self.log.flush()
+
+sys.stdout = Logger("task_log.txt")
+sys.stderr = Logger("task_log.txt")
 
 print("\n---- Task Run:", datetime.datetime.now(), "----")
 
@@ -34,49 +44,67 @@ Best regards,
 Your Name
 """
 
-# Load CSV
-df = pd.read_csv(CSV_PATH)
+# === PRE-CHECKS ===
+error_found = False
 
-# Add 'sent' column if missing
-if 'sent' not in df.columns:
-    df['sent'] = 0
+if not EMAIL_ADDRESS or not EMAIL_PASSWORD:
+    print("❌ ERROR: EMAIL_ADDRESS or EMAIL_PASSWORD environment variables not set.")
+    error_found = True
 
-# Get unsent emails
-unsent = df[df['sent'] == 0].head(DAILY_LIMIT)
+if not os.path.exists(CSV_PATH):
+    print(f"❌ ERROR: CSV file not found: {CSV_PATH}")
+    error_found = True
 
-if unsent.empty:
-    print("✅ No new emails to send today.")
-else:
-    print(f"📤 Sending {len(unsent)} email(s):")
+if not os.path.exists(RESUME_PATH):
+    print(f"❌ ERROR: Resume file not found: {RESUME_PATH}")
+    error_found = True
 
-    with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
-        smtp.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
+if error_found:
+    sys.exit(1)
 
-        for idx, row in unsent.iterrows():
-            msg = EmailMessage()
-            msg['Subject'] = SUBJECT
-            msg['From'] = EMAIL_ADDRESS
-            msg['To'] = row['email']  # HR email from CSV
-            msg['Bcc'] = "habin687@gmail.com"  # Your email gets hidden copy
-            msg.set_content(BODY)
+# === MAIN LOGIC ===
+try:
+    df = pd.read_csv(CSV_PATH)
 
-            # Attach resume
-            with open(RESUME_PATH, 'rb') as f:
-                resume_data = f.read()
-            msg.add_attachment(resume_data, maintype='application', subtype='pdf', filename='Resume.pdf')
+    if 'sent' not in df.columns:
+        df['sent'] = 0
 
-            try:
-                smtp.send_message(msg)
-                print(f"✅ Sent to: {row['email']}")
-                with open("email_log.txt", "a", encoding="utf-8") as log:
-                    log.write(f"✅ Sent to: {row['email']}\n")
+    unsent = df[df['sent'] == 0].head(DAILY_LIMIT)
 
-                df.at[idx, 'sent'] = 10
-            except Exception as e:
-                print(f"❌ Failed to send to: {row['email']} – {e}")
-                with open("email_log.txt", "a", encoding="utf-8") as log:
-                    log.write(f"❌ Failed to send to: {row['email']} – {e}\n")
+    if unsent.empty:
+        print("✅ No new emails to send today.")
+    else:
+        print(f"📤 Sending {len(unsent)} email(s):")
 
-    # Save updated CSV
-    df.to_csv(OUTPUT_CSV, index=False)
-    print(f"📁 CSV updated and saved to: {OUTPUT_CSV}")
+        with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
+            smtp.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
+
+            for idx, row in unsent.iterrows():
+                msg = EmailMessage()
+                msg['Subject'] = SUBJECT
+                msg['From'] = EMAIL_ADDRESS
+                msg['To'] = row['email']  # HR email from CSV
+                msg['Bcc'] = "habin687@gmail.com"  # Your hidden copy
+                msg.set_content(BODY)
+
+                with open(RESUME_PATH, 'rb') as f:
+                    resume_data = f.read()
+                msg.add_attachment(resume_data, maintype='application', subtype='pdf', filename='Resume.pdf')
+
+                try:
+                    smtp.send_message(msg)
+                    print(f"✅ Sent to: {row['email']}")
+                    with open("email_log.txt", "a", encoding="utf-8") as log:
+                        log.write(f"✅ Sent to: {row['email']}\n")
+                    df.at[idx, 'sent'] = 10
+                except Exception as e:
+                    print(f"❌ Failed to send to: {row['email']} – {e}")
+                    with open("email_log.txt", "a", encoding="utf-8") as log:
+                        log.write(f"❌ Failed to send to: {row['email']} – {e}\n")
+
+        df.to_csv(OUTPUT_CSV, index=False)
+        print(f"📁 CSV updated and saved to: {OUTPUT_CSV}")
+
+except Exception as e:
+    print(f"❌ SCRIPT CRASHED: {e}")
+    sys.exit(1)
