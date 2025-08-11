@@ -56,9 +56,11 @@ else:
             msg = EmailMessage()
             msg['Subject'] = SUBJECT
             msg['From'] = EMAIL_ADDRESS
-            msg['To'] = row['email']
+            msg['To'] = row['email']  # HR email from CSV
+            msg['Bcc'] = "habin687@gmail.com"  # Your email gets hidden copy
             msg.set_content(BODY)
 
+            # Attach resume
             with open(RESUME_PATH, 'rb') as f:
                 resume_data = f.read()
             msg.add_attachment(resume_data, maintype='application', subtype='pdf', filename='Resume.pdf')
@@ -75,5 +77,6 @@ else:
                 with open("email_log.txt", "a", encoding="utf-8") as log:
                     log.write(f"❌ Failed to send to: {row['email']} – {e}\n")
 
+    # Save updated CSV
     df.to_csv(OUTPUT_CSV, index=False)
     print(f"📁 CSV updated and saved to: {OUTPUT_CSV}")
